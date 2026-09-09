@@ -77,6 +77,9 @@ func hostCall(t *testing.T, m *host.Manager, name string, a map[string]any) map[
 	return r.(map[string]any)
 }
 func TestStopVerifiesOwnersJobsAndTerminalChildren(t *testing.T) {
+	// The supervisor reuses this test binary. Disable the race runtime's extra
+	// exit sleep so its shutdown timing matches the production executable.
+	t.Setenv("GORACE", os.Getenv("GORACE")+" atexit_sleep_ms=0")
 	cfg := stopFixture(t)
 	bin := filepath.Join(cfg.Home, "bin")
 	if e := os.MkdirAll(bin, 0700); e != nil {
