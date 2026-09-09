@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "MacBridge Go — Background Browser",
+  "version": "1.0.0",
+  "description": "A persistent background tab workspace and native Go bridge for your signed-in Chrome profile.",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "scripting",
+    "storage",
+    "nativeMessaging",
+    "alarms",
+    "management",
+    "identity",
+    "identity.email"
+  ],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "MacBridge background workspace"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3iYLdf234CAwxQ+VSviz5/CQcuIGX4P3Td5ow1j7usfrj0kLifOl1B5pyi7J9XCMtmN+CqK4GGTVOhR6DMB3UJg2fyHw5TqB5vRTsrCATUow2jwV9TBzECKO2JKqmAoOv8T/3iEx/YLLbRdax9lQzp0+RxG4KF/PCgdWQ8hBl3oQlnL+ybF0HyAqikWx20xZF5ucCNAMafYmq/Vv44xXVs1mXQ+dTvObycvB6PlmrGF4tHvX9IWTdJMXX6tntfO4GYZbqHitmDkxdAkX2BhNkZhYfx8huKrG2MI+T2xSsadhGpuoEYrsc6DY6MMcVTy0iXq+isa1s10/yO7WTAYGnQIDAQAB"
+}

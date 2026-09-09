@@ -1,0 +1,10 @@
+/bin/
+/MacBridge Go.app/
+*.tar.gz
+*.log
+.DS_Store
+/BUILDINFO.json
+/SHA256SUMS
+.env
+.env.*
+!.env.example

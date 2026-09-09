@@ -1,0 +1,1281 @@
+[
+  {
+    "name": "bridge_status",
+    "title": "Bridge status",
+    "description": "Inspect the host identity, runtime paths, permissions context, configured shell, audit log, and Codex executable. This is read-only.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "chrome_workspace_status",
+    "title": "MDB Chrome workspace status",
+    "description": "Inspect the extension-owned MDB Chrome tab group and reusable background-tab pool. This is local extension state only and does not access authenticated websites, so it does not consume a personal-browser URL grant.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "chatgpt_extension_status",
+    "title": "ChatGPT Chrome extension status",
+    "description": "Inspect the installed ChatGPT Chrome extension, its OpenAI native-host registration, and the live read-only chatgpt.com page-bridge status when a ChatGPT tab is open. This does not modify the OpenAI extension or invoke its private native-host RPC protocol.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "chatgpt_conversation_start",
+    "title": "Start or continue an experimental ChatGPT browser conversation",
+    "description": "Start a new ChatGPT conversation, or continue one exact existing conversation, through the signed-in page's first-party submitComposer runtime action without typing or clicking the UI and without foregrounding Chrome. Credentials and browser-generated proof material remain inside ChatGPT. The same bounded runtime also backs the separately selected experimental chatgpt-runtime browser models; it is never an automatic fallback.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000000,
+          "description": "Prompt for the new ChatGPT conversation. Audit logs retain only byte length and a hash prefix."
+        },
+        "transport": {
+          "type": "string",
+          "enum": [
+            "runtime",
+            "raw"
+          ],
+          "default": "runtime",
+          "description": "Use ChatGPT's first-party runtime by default. raw retains the direct private-request path only for diagnostics."
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "default": "gpt-5-6-pro",
+          "description": "ChatGPT web model slug to activate in the leased background tab."
+        },
+        "thinking_effort": {
+          "type": "string",
+          "enum": [
+            "minimal",
+            "low",
+            "standard",
+            "high",
+            "max"
+          ],
+          "default": "standard"
+        },
+        "max_runtime_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600,
+          "default": 600,
+          "description": "Maximum time to wait for this ChatGPT turn, including MDB tool use. Long-running agents may request up to one hour."
+        },
+        "continue_in_work": {
+          "type": "boolean",
+          "default": true,
+          "description": "Raw diagnostic mode only: advertise ChatGPT's local.continue_in_work function to the private request."
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^g-p-[A-Za-z0-9_-]{8,128}$",
+          "description": "Optional exact ChatGPT Project id. New runtime conversations are submitted only after the Project route and mounted composer state both match it."
+        },
+        "conversation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,128}$",
+          "description": "Optional exact existing ChatGPT conversation id. When supplied in runtime mode, MDB opens that conversation in an allocated background tab and continues it once."
+        },
+        "tab_id": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional existing leased chatgpt.com Chrome tab id. When omitted, runtime mode leases and releases an MDB background tab automatically."
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_workspace_setup",
+    "title": "Set up MDB Chrome workspace",
+    "description": "Provision the desired capacity for the extension-owned MDB Chrome tab group and reusable background-tab pool. The target is persisted even when Chrome is not focused. Missing tabs are created immediately only while the existing MDB Chrome window is already naturally focused; otherwise expansion remains pending until the next natural focus, so MDB never steals focus.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "pool_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32,
+          "default": 8,
+          "description": "Growth-only desired capacity for the reusable extension-owned MDB pool. Eight is the default and 32 is the hard maximum. Lower requests never close existing tabs."
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "chrome_tabs",
+    "title": "List approved Chrome tabs in background",
+    "description": "List tabs from the user's real signed-in Chrome profile without activating Chrome. Relaxed mode is the default and needs no per-site approval. When Strict approvals is enabled in the menu-bar app, only tabs covered by active scoped grants are returned.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url_contains": {
+          "type": "string",
+          "description": "Optional case-insensitive URL substring filter."
+        },
+        "title_contains": {
+          "type": "string",
+          "description": "Optional case-insensitive title substring filter."
+        },
+        "max_tabs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 200
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_open",
+    "title": "Open background Chrome tab",
+    "description": "Open a URL in an idle tab from the persistent MDB Chrome tab group. Routine calls never create a new Chrome tab, which avoids macOS focus theft. Relaxed mode is the default and permits normal HTTP/HTTPS sites without per-site approvals; Strict approvals optionally restores scoped URL grants.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_navigate",
+    "title": "Navigate Chrome tab in background",
+    "description": "Navigate an existing MDB Chrome tab without selecting it or activating Chrome. In relaxed mode normal HTTP/HTTPS navigation needs no per-site approval; Strict approvals restricts navigation to active scoped grants.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "tab_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "required": [
+        "tab_id",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_snapshot",
+    "title": "Read Chrome page in background",
+    "description": "Read visible text and a bounded list of interactive elements from an MDB Chrome tab without activating Chrome. Password input values are redacted. Strict approvals, when enabled, restricts readable URLs to active scoped grants.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "tab_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_text_chars": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 200000,
+          "default": 50000
+        },
+        "max_elements": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 200
+        }
+      },
+      "required": [
+        "tab_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_click",
+    "title": "Click Chrome element in background",
+    "description": "Click an element in an MDB Chrome tab without activating Chrome. Uses an adaptive pointer/mouse event sequence; controls that activate on pointerdown/mousedown are not followed by a redundant synthetic click that could toggle them closed. Events remain synthetic/isTrusted=false, so genuine trusted-user-gesture flows, CAPTCHAs, native dialogs, and file pickers still require foreground/manual interaction.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "tab_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000
+        }
+      },
+      "required": [
+        "tab_id",
+        "selector"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_fill",
+    "title": "Fill Chrome field in background",
+    "description": "Fill an input, textarea, select, or contenteditable element in an MDB Chrome tab without activating Chrome. Relaxed mode is the default; Strict approvals optionally restricts sites. File inputs remain foreground-only.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "tab_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 500000
+        },
+        "submit": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, request form submission after filling. This can trigger external side effects."
+        }
+      },
+      "required": [
+        "tab_id",
+        "selector",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "chrome_close",
+    "title": "Close background Chrome tab",
+    "description": "Release an MDB workspace tab back to the pool, or close a non-workspace Chrome tab. Strict approvals affects site access, not local workspace cleanup.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "tab_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "allow_active": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "tab_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "shell_exec",
+    "title": "Execute shell command",
+    "description": "Run an arbitrary command through the configured login shell with the full permissions of the macOS user running this bridge. Use for commands that finish within the requested timeout. This can read, modify, delete, deploy, access the network, or invoke other programs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact shell command to execute."
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory. Supports absolute paths, relative paths, and ~/ paths. Defaults to the user's home directory."
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "description": "Environment overrides. Set a value to null to remove it."
+        },
+        "stdin": {
+          "type": "string",
+          "description": "Optional text to send to stdin."
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1800000,
+          "default": 600000,
+          "description": "0 disables the bridge timeout. Prefer shell_start for long-running services."
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 64000000,
+          "description": "Maximum bytes captured separately from stdout and stderr."
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "shell_start",
+    "title": "Start background shell job",
+    "description": "Start an arbitrary detached background command with full host permissions. Output is written to persistent log files and the job can be inspected or stopped later.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "shell_job_status",
+    "title": "Inspect background job",
+    "description": "Check whether a background job is running and return the tail of its stdout and stderr logs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string"
+        },
+        "max_log_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 8000000,
+          "default": 100000
+        }
+      },
+      "required": [
+        "job_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "shell_job_list",
+    "title": "List background jobs",
+    "description": "List persistent background-job metadata and current running state.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "shell_job_kill",
+    "title": "Stop background job",
+    "description": "Send a signal to the background job's process group. Defaults to SIGTERM.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string"
+        },
+        "signal": {
+          "type": "string",
+          "enum": [
+            "SIGTERM",
+            "SIGKILL",
+            "SIGINT",
+            "SIGHUP"
+          ],
+          "default": "SIGTERM"
+        }
+      },
+      "required": [
+        "job_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "fs_read",
+    "title": "Read file",
+    "description": "Read any file accessible to the macOS user. Supports byte ranges and text or base64 output.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "encoding": {
+          "type": "string",
+          "enum": [
+            "utf8",
+            "base64"
+          ],
+          "default": "utf8"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64000000,
+          "default": 1000000
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "fs_write",
+    "title": "Write file",
+    "description": "Create, replace, or append to any file accessible to the macOS user. Parent directories can be created automatically. Replacement writes are atomic by default.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "encoding": {
+          "type": "string",
+          "enum": [
+            "utf8",
+            "base64"
+          ],
+          "default": "utf8"
+        },
+        "append": {
+          "type": "boolean",
+          "default": false
+        },
+        "atomic": {
+          "type": "boolean",
+          "default": true
+        },
+        "create_parents": {
+          "type": "boolean",
+          "default": true
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095,
+          "description": "Optional POSIX mode as a decimal integer, for example 420 for 0644."
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "fs_list",
+    "title": "List directory",
+    "description": "List a directory, optionally recursively, with type, size, mode, and timestamps. Symlinks are not followed during recursion.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "recursive": {
+          "type": "boolean",
+          "default": false
+        },
+        "include_hidden": {
+          "type": "boolean",
+          "default": true
+        },
+        "max_entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 5000
+        },
+        "max_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 10
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "fs_stat",
+    "title": "Inspect filesystem path",
+    "description": "Return lstat metadata for any accessible filesystem path, including symlink target when applicable.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "fs_manage",
+    "title": "Manage filesystem path",
+    "description": "Perform unrestricted filesystem operations: mkdir, remove, move, copy, chmod, or symlink. Remove is recursive when requested. These operations use the host user's permissions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "mkdir",
+            "remove",
+            "move",
+            "copy",
+            "chmod",
+            "symlink"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "description": "Primary path or symlink path."
+        },
+        "destination": {
+          "type": "string",
+          "description": "Destination for move/copy, or target for symlink."
+        },
+        "recursive": {
+          "type": "boolean",
+          "default": false
+        },
+        "force": {
+          "type": "boolean",
+          "default": false
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095
+        }
+      },
+      "required": [
+        "operation",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "apply_patch",
+    "title": "Apply unified diff",
+    "description": "Apply a unified diff using git apply in the specified working directory. This does not invoke a model and can modify any paths permitted by git apply and the host OS.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "patch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "check_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "reverse": {
+          "type": "boolean",
+          "default": false
+        },
+        "three_way": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "patch"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "codex_thread_read",
+    "title": "Read Codex thread",
+    "description": "Read a stored local Codex thread through codex app-server without resuming it or starting a model turn. Set include_turns to true for the full persisted history.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "type": "string"
+        },
+        "include_turns": {
+          "type": "boolean",
+          "default": true
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 120000,
+          "default": 30000
+        }
+      },
+      "required": [
+        "thread_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "codex_thread_list",
+    "title": "List Codex threads",
+    "description": "Page through stored local Codex threads without resuming them or starting model turns. Supports search, cwd, archived state, sorting, and cursor pagination.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 50
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "search_term": {
+          "type": "string"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "is_pinned": {
+          "type": "boolean"
+        },
+        "use_state_db_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "model_providers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "cli",
+              "vscode",
+              "exec",
+              "appServer",
+              "subAgent",
+              "subAgentReview",
+              "subAgentCompact",
+              "subAgentThreadSpawn",
+              "subAgentOther",
+              "unknown"
+            ]
+          }
+        },
+        "sort_key": {
+          "type": "string",
+          "enum": [
+            "created_at",
+            "updated_at",
+            "recency_at"
+          ],
+          "default": "recency_at"
+        },
+        "sort_direction": {
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "default": "desc"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 120000,
+          "default": 30000
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "codex_thread_turns_list",
+    "title": "Page Codex thread turns",
+    "description": "Page a stored Codex thread's turns without resuming it or starting a model turn. Use items_view=full to recover complete persisted turn items when codex_thread_read is too large for one response.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 50
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "sort_direction": {
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "default": "asc"
+        },
+        "items_view": {
+          "type": "string",
+          "enum": [
+            "notLoaded",
+            "summary",
+            "full"
+          ],
+          "default": "full"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 120000,
+          "default": 30000
+        }
+      },
+      "required": [
+        "thread_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "audit_tail",
+    "title": "Read bridge audit log",
+    "description": "Return the tail of the bridge's local JSONL audit log. The default metadata mode redacts common token patterns and stores only an argument preview plus a hash.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 8000000,
+          "default": 200000
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "pty_start",
+    "title": "Start interactive pty session",
+    "description": "Start a program on a real pseudo-terminal and keep it running as a session that can be written to, read from, resized, and signalled. Use this for anything that prompts or redraws: interactive authentication, sudo and ssh passphrase prompts, REPLs, test watchers, git rebase, and full-screen TUIs. 'command' plus 'args' is an argv vector, not a shell string; for a shell use command '/bin/zsh' with args ['-i']. Sessions are in memory only and do not survive a bridge restart. Removing the full-access unlock file terminates every live session.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Executable to run. Absolute path, or a name resolved through PATH."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256,
+          "description": "Argument vector. Not parsed by a shell."
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory. Supports absolute, relative, and ~/ paths. Defaults to the user's home directory."
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "maxProperties": 64,
+          "description": "Environment overrides. Set a value to null to remove it."
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 500,
+          "default": 120
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 200,
+          "default": 30
+        },
+        "term": {
+          "type": "string",
+          "enum": [
+            "xterm-256color",
+            "xterm",
+            "vt100",
+            "dumb"
+          ],
+          "default": "xterm-256color",
+          "description": "TERM for the child. Programs that call tput fail outright without it."
+        },
+        "idle_timeout_ms": {
+          "type": "integer",
+          "minimum": 30000,
+          "maximum": 3600000,
+          "default": 900000,
+          "description": "Session is reclaimed after this long with no pty tool call against it. Output from the child does not count as activity."
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "pty_read",
+    "title": "Read pty session output",
+    "description": "Read a byte range of a session's output. 'cursor' is an absolute byte offset, so the same cursor always returns the same bytes and 'next_cursor' continues without gap or overlap; a retried read never loses output. Reading a session that has already exited is not an error and is how final output is collected. ANSI escapes and carriage-return progress redraws are removed by default; disable both to see raw TUI bytes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Absolute byte offset. Start at 0, then pass the previous next_cursor."
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1000000,
+          "default": 65536
+        },
+        "strip_ansi": {
+          "type": "boolean",
+          "default": true
+        },
+        "collapse_carriage_returns": {
+          "type": "boolean",
+          "default": true
+        },
+        "wait_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30000,
+          "default": 0,
+          "description": "Wait up to this long for new output before returning. 0 returns immediately."
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "pty_write",
+    "title": "Write to pty session",
+    "description": "Send bytes to the session's terminal exactly as typed. End a line with \\r to submit it. Control characters: \\u0003 is Ctrl-C (interrupts only the foreground program), \\u0004 is end-of-file, \\u001a is Ctrl-Z, \\u001b is Escape. Input is never echoed back by this tool; read it with pty_read. The written bytes are never recorded in the audit log, so passphrase prompts are safe to answer here. Line length limit: while the terminal is in canonical mode (the default, and what every interactive prompt uses), the line discipline DISCARDS an entire input line of 1024 bytes or more rather than truncating it, so a write that would build such a line is refused with PTY_WRITE_CANON_LIMIT instead of being reported as delivered. Bytes accumulate across calls until a \\r or \\n, so chunking a long line does not evade it. Send lines of at most 1023 bytes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "data": {
+          "type": "string",
+          "maxLength": 65536
+        }
+      },
+      "required": [
+        "session_id",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "pty_resize",
+    "title": "Resize pty session",
+    "description": "Change the terminal window size and deliver SIGWINCH to the session, so full-screen programs redraw at the new geometry. The returned cols and rows are the kernel's own read-back of the window size, not the requested values; a resize that cannot be confirmed is reported as an error rather than as success.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 500
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 200
+        }
+      },
+      "required": [
+        "session_id",
+        "cols",
+        "rows"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "pty_signal",
+    "title": "Signal pty session",
+    "description": "Send a signal to the session's entire process group, which includes the shell itself and every program it started. To interrupt only the foreground program and keep the shell alive, use pty_write with \\u0003 instead. Signals are delivered by the pty helper to the session leader's group; the result reports whether delivery was confirmed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "signal": {
+          "type": "string",
+          "enum": [
+            "INT",
+            "TERM",
+            "KILL",
+            "HUP",
+            "QUIT",
+            "USR1",
+            "USR2",
+            "WINCH",
+            "TSTP",
+            "CONT"
+          ]
+        }
+      },
+      "required": [
+        "session_id",
+        "signal"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "pty_close",
+    "title": "Close pty session",
+    "description": "End a session and reclaim it. Sends SIGTERM, waits for the grace period, then SIGKILL to the leader's process group, then SIGKILL to anything still holding the session's controlling terminal (interactive job control puts every background job — a plain 'cmd &' — in its own process group, which a group kill does not reach; those pids are listed in 'ttyProcessesKilled'). 'leaderGroupGone' reports the group check alone. 'containment_verified' is true only when the group is gone AND nothing that shared the terminal survived; survivors are listed in 'uncontainedPids'. It can legitimately be false: a descendant that both called setsid() and detached from the terminal escapes both kills. Idempotent: closing an already-closed session reports its recorded outcome.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "force": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip SIGTERM and the grace period."
+        },
+        "grace_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "default": 2000
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  }
+]
