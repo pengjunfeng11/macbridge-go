@@ -6,6 +6,25 @@
 
 保留原项目的 33 个 MCP 工具名称、主要参数与结果字段，以及本机完整权限的定位。仅复用了原项目公开的工具描述和 JSON Schema 作为兼容规格，没有调用或打包其 JavaScript/Perl 服务端。
 
+## 让 Codex 帮你安装
+
+仓库附带 [macbridge-go-install Skill](skills/macbridge-go-install/SKILL.md)，负责检查已有安装、构建、Chrome 扩展、ChatGPT Secure MCP Tunnel 接入及真实工具验收。
+
+在 Codex 中发送：
+
+```text
+使用 $skill-installer 安装这个 Skill：
+https://github.com/pengjunfeng11/macbridge-go/tree/main/skills/macbridge-go-install
+```
+
+安装成功后，下一条消息发送：
+
+```text
+使用 $macbridge-go-install，把 MacBridge Go 安装到我的 Mac，并接入 ChatGPT 聊天模式；如果已经安装，先检查并复用现有配置。
+```
+
+私有仓库需要当前 GitHub 账号具有访问权限。安装 Skill 只添加操作指南，不会自行启动或重装 MacBridge；也可以继续按下面的步骤手动安装。
+
 ## 直接使用
 
 仓库存放源码，不包含编译产物或本机运行配置。需要 macOS 13+、Go 1.23+ 和 Xcode Command Line Tools。从源码安装：
