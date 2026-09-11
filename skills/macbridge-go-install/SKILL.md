@@ -5,7 +5,7 @@ description: Download, install, connect, use, or troubleshoot MacBridge Go on ma
 
 # MacBridge Go: download, installation and use
 
-Use the Go implementation from [pengjunfeng11/macbridge-go](https://github.com/pengjunfeng11/macbridge-go). The repository is currently private: team members need access from its owner through their own GitHub account; obtaining this Skill does not grant repository access. Its `README.md`, CLI source and discovered MCP tool schemas are the contract; do not substitute the upstream JavaScript project.
+Use the Go implementation from the public [pengjunfeng11/macbridge-go](https://github.com/pengjunfeng11/macbridge-go) repository. Source and Skill downloads require no GitHub login or repository approval. Each user still needs their own tunnel and runtime key for ChatGPT Secure MCP Tunnel integration. Its `README.md`, CLI source and discovered MCP tool schemas are the contract; do not substitute the upstream JavaScript project.
 
 Keep the user's requested client and location. If the conversation does not specify a client, default to ChatGPT **Chat** connecting to this Mac. A request for instructions or to install this Skill alone does not authorize installing the bridge. For an actual bridge installation request, perform the requested setup and verification without repeatedly asking for the same authorization.
 
@@ -25,7 +25,7 @@ For a usage request with connected tools, go directly to **Use the connected bri
 
 Run this section only for a missing installation or a requested rebuild/upgrade. Skip it for a working installation or read-only diagnosis.
 
-Use an existing checkout of the correct repository, or clone it into the user's chosen durable location (default `~/.local/share/macbridge-go`). Check access with `gh auth status` or the user's existing Git credentials. Do not request that GitHub tokens be pasted into chat.
+Use an existing checkout of the correct repository, or clone it over HTTPS into the user's chosen durable location (default `~/.local/share/macbridge-go`). Public downloads do not require `gh auth login` or an API key. Do not request that GitHub tokens be pasted into chat.
 
 For a fresh checkout, after confirming the destination is absent:
 
@@ -34,7 +34,7 @@ mkdir -p "$HOME/.local/share"
 git clone https://github.com/pengjunfeng11/macbridge-go.git "$HOME/.local/share/macbridge-go"
 ```
 
-Use the user's chosen location instead when supplied. If access is denied, identify the missing repository access and stop dependent installation; do not replace this source with another repository. Enter the successfully cloned directory before building. Existing checkouts must retain uncommitted changes; fetch/update only when the requested install or upgrade requires it.
+Use the user's chosen location instead when supplied. If downloading fails, check the actual URL, network/proxy response and Git configuration; stop dependent installation until the source is available, and do not substitute another repository or assume a personal token is required. Enter the successfully cloned directory before building. Existing checkouts must retain uncommitted changes; fetch/update only when the requested install or upgrade requires it.
 
 From the successfully downloaded source directory (substitute the actual path for an existing or custom checkout):
 

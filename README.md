@@ -25,7 +25,7 @@ https://github.com/pengjunfeng11/macbridge-go/tree/main/skills/macbridge-go-inst
 
 已经接好后，可以发送「使用 $macbridge-go-install，检查这个项目并运行测试」或「用 MacBridge Go 打开这个网页并提取内容」。日常使用会复用现有连接，不重新安装。
 
-私有仓库需要当前 GitHub 账号具有访问权限。安装 Skill 只添加操作指南，不会自行启动或重装 MacBridge；也可以继续按下面的步骤手动安装。
+源码和 Skill 均可从公开仓库直接下载，无需 GitHub 登录或仓库授权。安装 Skill 只添加操作指南，不会自行启动或重装 MacBridge；也可以继续按下面的步骤手动安装。接入 ChatGPT Secure MCP Tunnel 时，每位使用者仍需配置自己的隧道和运行密钥。
 
 ## 直接使用
 
